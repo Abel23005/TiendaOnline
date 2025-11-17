@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="bg-gradient-to-r from-primary to-secondary text-white py-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-5xl font-bold mb-6">Bienvenido a TiendaOnline</h1>
+        <p class="text-xl mb-8">Encuentra todo lo que necesitas en un solo lugar</p>
+        <a href="#productos" class="bg-white text-primary px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+            Ver Productos
+        </a>
+    </div>
+</section>
+
+<!-- Categories Section -->
+<section class="py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-3xl font-bold text-center mb-12">Nuestras Categorías</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for categoria in categorias %}
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                {% if categoria.imagen %}
+                <img src="{{ categoria.imagen.url }}" alt="{{ categoria.nombre }}" class="w-full h-48 object-cover">
+                {% else %}
+                <div class="w-full h-48 bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                    <i class="fas fa-box text-white text-4xl"></i>
+                </div>
+                {% endif %}
+                <div class="p-6">
+                    <h3 class="text-xl font-semibold mb-2">{{ categoria.nombre }}</h3>
+                    <p class="text-gray-600 mb-4">{{ categoria.descripcion|default:"Explora nuestra selección de productos" }}</p>
+                    <a href="#" class="text-primary font-semibold hover:underline">
+                        Ver productos <i class="fas fa-arrow-right ml-1"></i>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Featured Products Section -->
+<section id="productos" class="py-16 bg-gray-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 class="text-3xl font-bold text-center mb-12">Productos Destacados</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {% for producto in productos %}
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
+                {% if producto.imagen %}
+                <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="w-full h-48 object-cover">
+                {% else %}
+                <div class="w-full h-48 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                    <i class="fas fa-image text-gray-400 text-3xl"></i>
+                </div>
+                {% endif %}
+                <div class="p-6">
+                    <h3 class="text-lg font-semibold mb-2">{{ producto.nombre }}</h3>
+                    <p class="text-gray-600 text-sm mb-3">{{ producto.descripcion|truncatewords:10 }}</p>
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-2xl font-bold text-primary">${{ producto.precio }}</span>
+                        <span class="text-sm text-gray-500">Stock: {{ producto.stock }}</span>
+                    </div>
+                    <div class="flex space-x-2">
+                        <a href="{% url 'tienda:detalle_producto' producto.id %}" 
+                           class="flex-1 bg-primary text-white text-center py-2 px-4 rounded-lg hover:bg-secondary transition-colors">
+                            Ver Detalle
+                        </a>
+                        <button onclick="addToCart({{ producto.id }}, '{{ producto.nombre|escapejs }}', {{ producto.precio }}, '{% if producto.imagen %}{{ producto.imagen.url }}{% endif %}')"
+                                class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+                            <i class="fas fa-cart-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-span-full text-center py-12">
+                <i class="fas fa-box-open text-gray-400 text-6xl mb-4"></i>
+                <p class="text-gray-500 text-xl">No hay productos disponibles</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="text-center">
+                <div class="bg-primary text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-shipping-fast text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-2">Envío Rápido</h3>
+                <p class="text-gray-600">Entrega en 24-48 horas</p>
+            </div>
+            <div class="text-center">
+                <div class="bg-primary text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-shield-alt text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-2">Compra Segura</h3>
+                <p class="text-gray-600">Pagos 100% seguros</p>
+            </div>
+            <div class="text-center">
+                <div class="bg-primary text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-undo text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold mb-2">Devoluciones</h3>
+                <p class="text-gray-600">30 días para devolver</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
