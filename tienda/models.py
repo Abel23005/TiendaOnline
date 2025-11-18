@@ -36,3 +36,39 @@ class Producto(models.Model):
     @property
     def disponible(self):
         return self.activo and self.stock > 0
+
+class Compra(models.Model):
+    ESTADOS = [
+        ('pendiente', 'Pendiente'),
+        ('completada', 'Completada'),
+        ('cancelada', 'Cancelada'),
+    ]
+    
+    fecha = models.DateTimeField(auto_now_add=True)
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
+    envio = models.DecimalField(max_digits=10, decimal_places=2, default=5.00)
+    impuestos = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    total = models.DecimalField(max_digits=10, decimal_places=2)
+    estado = models.CharField(max_length=20, choices=ESTADOS, default='completada')
+    
+    class Meta:
+        verbose_name = 'Compra'
+        verbose_name_plural = 'Compras'
+        ordering = ['-fecha']
+    
+    def __str__(self):
+        return f'Compra #{self.id} - {self.fecha.strftime("%Y-%m-%d %H:%M")} - ${self.total}'
+
+class DetalleCompra(models.Model):
+    compra = models.ForeignKey(Compra, on_delete=models.CASCADE, related_name='detalles')
+    producto = models.ForeignKey(Producto, on_delete=models.PROTECT)
+    cantidad = models.PositiveIntegerField()
+    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2)
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    class Meta:
+        verbose_name = 'Detalle de Compra'
+        verbose_name_plural = 'Detalles de Compra'
+    
+    def __str__(self):
+        return f'{self.compra} - {self.producto.nombre} x{self.cantidad}'

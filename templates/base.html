@@ -37,7 +37,11 @@
                         <i class="fas fa-search absolute right-3 top-3 text-gray-400"></i>
                     </div>
                     
-                    <a href="{% url 'tienda:carrito' %}" class="relative p-2 text-gray-600 hover:text-primary transition-colors">
+                    <a href="{% url 'tienda:mis_compras' %}" class="p-2 text-gray-600 hover:text-primary transition-colors" title="Mis Compras">
+                        <i class="fas fa-shopping-bag text-xl"></i>
+                    </a>
+                    
+                    <a href="{% url 'tienda:carrito' %}" class="relative p-2 text-gray-600 hover:text-primary transition-colors" title="Carrito">
                         <i class="fas fa-shopping-cart text-xl"></i>
                         <span id="cart-count" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">0</span>
                     </a>
@@ -101,29 +105,71 @@
             document.getElementById('cart-count').textContent = cart.length;
         }
         
-        function addToCart(productId, productName, price, imageUrl = null) {
-            const existingItem = cart.find(item => item.id === productId);
-            if (existingItem) {
-                existingItem.quantity += 1;
-            } else {
-                cart.push({
-                    id: productId,
-                    name: productName,
-                    price: price,
-                    quantity: 1,
-                    image: imageUrl
-                });
+        async function addToCart(productId, productName, price, imageUrl = null) {
+            // Verificar stock disponible antes de agregar
+            try {
+                const response = await fetch(`/api/productos/${productId}/`);
+                if (response.ok) {
+                    const productInfo = await response.json();
+                    const stockDisponible = productInfo.stock || 0;
+                    
+                    if (stockDisponible === 0) {
+                        showNotification('Este producto está agotado', 'error');
+                        return;
+                    }
+                    
+                    const existingItem = cart.find(item => item.id === productId);
+                    if (existingItem) {
+                        if (existingItem.quantity >= stockDisponible) {
+                            showNotification(`Stock limitado. Solo hay ${stockDisponible} unidades disponibles`, 'warning');
+                            return;
+                        }
+                        existingItem.quantity += 1;
+                    } else {
+                        cart.push({
+                            id: productId,
+                            name: productName,
+                            price: price,
+                            quantity: 1,
+                            image: imageUrl || productInfo.imagen
+                        });
+                    }
+                    localStorage.setItem('cart', JSON.stringify(cart));
+                    updateCartCount();
+                    showNotification('Producto agregado al carrito');
+                }
+            } catch (error) {
+                console.error('Error verificando stock:', error);
+                // Si hay error, permitir agregar de todas formas
+                const existingItem = cart.find(item => item.id === productId);
+                if (existingItem) {
+                    existingItem.quantity += 1;
+                } else {
+                    cart.push({
+                        id: productId,
+                        name: productName,
+                        price: price,
+                        quantity: 1,
+                        image: imageUrl
+                    });
+                }
+                localStorage.setItem('cart', JSON.stringify(cart));
+                updateCartCount();
+                showNotification('Producto agregado al carrito');
             }
-            localStorage.setItem('cart', JSON.stringify(cart));
-            updateCartCount();
-            
-            // Show notification
-            showNotification('Producto agregado al carrito');
         }
         
-        function showNotification(message) {
+        function showNotification(message, type = 'success') {
+            const colors = {
+                success: 'bg-green-500',
+                error: 'bg-red-500',
+                warning: 'bg-yellow-500',
+                info: 'bg-blue-500'
+            };
+            const color = colors[type] || colors.success;
+            
             const notification = document.createElement('div');
-            notification.className = 'fixed top-20 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform';
+            notification.className = `fixed top-20 right-4 ${color} text-white px-6 py-3 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform`;
             notification.textContent = message;
             document.body.appendChild(notification);
             
@@ -134,7 +180,9 @@
             setTimeout(() => {
                 notification.classList.add('translate-x-full');
                 setTimeout(() => {
-                    document.body.removeChild(notification);
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
                 }, 300);
             }, 3000);
         }
