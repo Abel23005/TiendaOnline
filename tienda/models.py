@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class Categoria(models.Model):
     nombre = models.CharField(max_length=100)
     descripcion = models.TextField(blank=True)
@@ -36,3 +37,20 @@ class Producto(models.Model):
     @property
     def disponible(self):
         return self.activo and self.stock > 0
+
+
+class CartItem(models.Model):
+    session_key = models.CharField(max_length=40, db_index=True)
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE, related_name='cart_items')
+    cantidad = models.PositiveIntegerField(default=1)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('session_key', 'producto')
+
+    def __str__(self):
+        return f"{self.cantidad} x {self.producto.nombre} ({self.session_key})"
+
+    @property
+    def subtotal(self):
+        return self.cantidad * self.producto.precio
